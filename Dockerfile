@@ -23,6 +23,11 @@ COPY --from=builder /app/ui/history-v3/dist ./ui/history-v3/dist
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
+# Patch: convert thinking.type "enabled" to "adaptive" and strip budget_tokens
+# copilot-api-js checks modelHasAdaptiveThinking() for headers but doesn't convert the type
+# Copilot API rejects budget_tokens with adaptive thinking
+RUN sed -i 's/adjustThinkingBudget(wire, opts?.resolvedModel);/if (wire.thinking \&\& wire.thinking.type === "enabled" \&\& modelHasAdaptiveThinking(opts?.resolvedModel)) { wire.thinking = { type: "adaptive" }; } adjustThinkingBudget(wire, opts?.resolvedModel);/' dist/main.mjs
+
 # Copy config to the path the app actually reads from
 COPY config.yaml /root/.local/share/copilot-api/config.yaml
 
