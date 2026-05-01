@@ -191,6 +191,53 @@ model_overrides:
   claude-haiku-4.5: claude-sonnet-4.6
 ```
 
+## Using with OpenAI Codex CLI
+
+The proxy also works with [OpenAI Codex CLI](https://github.com/openai/codex), letting you use GPT models from your Copilot subscription.
+
+### Setup
+
+1. Install Codex CLI:
+```powershell
+npm install -g @openai/codex
+```
+
+2. Create `~/.codex/config.toml`:
+```toml
+model = "gpt-5.5"
+model_provider = "copilot"
+
+[model_providers.copilot]
+name = "GitHub Copilot via proxy"
+base_url = "http://localhost:4141/v1"
+experimental_bearer_token = "<paste PROXY_AUTH_TOKEN from .env>"
+wire_api = "responses"
+```
+
+3. Start the proxy and run Codex:
+```powershell
+./copilotproxy.ps1 start
+codex
+```
+
+### Notes
+
+- `wire_api` must be `"responses"` (not `"chat"`, which is deprecated in Codex CLI)
+- Use `experimental_bearer_token` to embed the auth token directly, avoiding environment variable propagation issues
+- Available GPT models include `gpt-5.5`, `gpt-5.4`, `gpt-5.2`, `gpt-4.1`, and their variants
+- Run `codex --model <name>` to override the default model for a single session
+
+### Model Comparison (via Copilot API)
+
+| Model | Context | Max Output | Effort Levels |
+|-------|---------|-----------|---------------|
+| gpt-5.5 | 400K | 128K | none, low, medium, high, xhigh |
+| gpt-5.4 | 400K | 128K | low, medium, high, xhigh |
+| gpt-5.2 | 400K | 128K | low, medium, high, xhigh |
+| claude-opus-4.6-1m | 1M | 64K | low, medium, high |
+| claude-opus-4.7 | 200K | 32K | medium only |
+| claude-sonnet-4.6 | - | - | n/a |
+
 ## Why Docker?
 
 Running in a container isolates npm/bun dependencies from your host machine, mitigating supply chain risks. The proxy handles your GitHub token — keeping that in an isolated container with no host filesystem access is a good security practice.
